@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Skript Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-save:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .output-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border-left: 4px solid #388e3c;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .example {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .example code {
+            background: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ Minecraft Skript Generator</h1>
+        <p class="subtitle">Convert Minecraft summon commands to Skript format</p>
+
+        <div class="form-group">
+            <label for="commandName">Command Name</label>
+            <input type="text" id="commandName" placeholder="e.g., yuva, yoddha, warrior" value="">
+            <div class="example">
+                Example: If you enter <code>yuva</code>, the command will be <code>/yuva</code>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="inputCommands">Paste Your Summon Commands</label>
+            <textarea id="inputCommands" rows="12" placeholder="Paste your Minecraft summon commands here...&#10;&#10;Example:&#10;summon item ~ ~1 ~ {Item:{id:iron_helmet,...}}&#10;summon item ~ ~1 ~ {Item:{id:iron_chestplate,...}}"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-generate" onclick="generateSkript()">🔨 Generate Skript</button>
+            <button class="btn-save" id="saveBtn" onclick="saveFile()" disabled>💾 Save .sk File</button>
+        </div>
+
+        <div id="outputSection" class="output-section hidden">
+            <div id="alertBox"></div>
+            <div class="form-group">
+                <label for="outputSkript">Generated Skript Code</label>
+                <textarea id="outputSkript" rows="20" readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateSkript() {
+            const commandName = document.getElementById('commandName').value.trim();
+            const inputCommands = document.getElementById('inputCommands').value.trim();
+            const alertBox = document.getElementById('alertBox');
+            const outputSection = document.getElementById('outputSection');
+            const outputSkript = document.getElementById('outputSkript');
+            const saveBtn = document.getElementById('saveBtn');
+
+            alertBox.innerHTML = '';
+            
+            if (!commandName) {
+                alertBox.innerHTML = '<div class="alert alert-error">❌ Please enter a command name!</div>';
+                outputSection.classList.remove('hidden');
+                return;
+            }
+
+            if (!inputCommands) {
+                alertBox.innerHTML = '<div class="alert alert-error">❌ Please paste some summon commands!</div>';
+                outputSection.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const lines = inputCommands.split('\n').filter(line => {
+                    const trimmed = line.trim();
+                    return trimmed && !trimmed.startsWith('//') && !trimmed.startsWith('#');
+                });
+
+                if (lines.length === 0) {
+                    alertBox.innerHTML = '<div class="alert alert-error">❌ No valid commands found!</div>';
+                    outputSection.classList.remove('hidden');
+                    return;
+                }
+
+                let skriptCode = `command /${commandName}:\n`;
+                skriptCode += `    permission: ${commandName}.give\n`;
+                skriptCode += `    permission message: &cYou don't have permission to use this command!\n`;
+                skriptCode += `    trigger:\n`;
+                skriptCode += `        set {_x} to x-coordinate of player\n`;
+                skriptCode += `        set {_y} to y-coordinate of player\n`;
+                skriptCode += `        set {_z} to z-coordinate of player\n`;
+                skriptCode += `        \n`;
+
+                lines.forEach((line, index) => {
+                    let trimmedLine = line.trim();
+                    
+                    if (trimmedLine.startsWith('summon item')) {
+                        trimmedLine = trimmedLine.replace(/^summon item\s+~\s+~1\s+~/, 'summon item %{_x}% %{_y}% %{_z}%');
+                        trimmedLine = trimmedLine.replace(/"/g, "'");
+                        
+                        skriptCode += `        # Item ${index + 1}\n`;
+                        skriptCode += `        make console execute command "/${trimmedLine}"\n`;
+                        skriptCode += `        \n`;
+                    }
+                });
+
+                skriptCode += `        send "&aAll ${commandName} items have been spawned at your location!"`;
+
+                outputSkript.value = skriptCode;
+                outputSection.classList.remove('hidden');
+                saveBtn.disabled = false;
+                
+                alertBox.innerHTML = `<div class="alert alert-success">✅ Successfully generated Skript code for command: /${commandName}</div>`;
+                
+                outputSkript.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (error) {
+                alertBox.innerHTML = `<div class="alert alert-error">❌ Error generating Skript: ${error.message}</div>`;
+                outputSection.classList.remove('hidden');
+            }
+        }
+
+        function saveFile() {
+            const commandName = document.getElementById('commandName').value.trim();
+            const outputSkript = document.getElementById('outputSkript').value;
+
+            if (!outputSkript) {
+                alert('No Skript code to save!');
+                return;
+            }
+
+            const blob = new Blob([outputSkript], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${commandName}.sk`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-info">💾 File saved as: ${commandName}.sk</div>`;
+        }
+
+        document.getElementById('commandName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateSkript();
+            }
+        });
+    </script>
+</body>
+</html>
