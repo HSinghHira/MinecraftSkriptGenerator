@@ -273,7 +273,6 @@
             }
         }
 
-        /* Toggle Switch Styles */
         .toggle-wrapper {
             display: flex;
             align-items: center;
@@ -621,7 +620,6 @@
         <input id="importFile" type="file" class="hidden" accept=".txt,.mcfunction" />
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js" defer></script>
 
     <script>
@@ -742,6 +740,15 @@
 
             out += `${indent}trigger:\n`;
 
+            // Add coordinate variables
+            if (commentEnabled && descriptive) {
+                out += `${indent}${indent}# Store player coordinates\n`;
+            }
+            out += `${indent}${indent}set {_x} to x-coordinate of player\n`;
+            out += `${indent}${indent}set {_y} to y-coordinate of player\n`;
+            out += `${indent}${indent}set {_z} to z-coordinate of player\n`;
+            out += `${indent}${indent}\n`;
+
             // Process commands
             let commandBlock = '';
             const loopTimes = loopCommands.checked ? parseInt(loopCount.value) || 1 : 1;
@@ -757,12 +764,17 @@
                     // Replace coordinates if enabled
                     if (replaceCoords.checked) {
                         processedLine = processedLine.replace(/~ ~ ~/g, '%player\'s location%');
+                    } else {
+                        // Replace ~ ~1 ~ with coordinate variables for summon item commands
+                        if (processedLine.includes('summon item')) {
+                            processedLine = processedLine.replace(/~ ~1 ~/g, '%{_x}% %{_y}% %{_z}%');
+                            processedLine = processedLine.replace(/~ ~ ~/g, '%{_x}% %{_y}% %{_z}%');
+                        }
                     }
 
                     // Add command comment
                     if (commentEnabled) {
                         if (descriptive) {
-
                             commandBlock += `${indent}${indent}# Command ${i + 1}\n`;
                         }
                     }
@@ -869,7 +881,7 @@
             zip.file(fileName, outputSkript.value);
 
             // Add a readme
-            zip.file('README.txt', `Minecraft Skript Generator\n\nGenerated: ${new Date().toLocaleString()}\nCommand: /${commandName.value || 'mycommand'}\n\nInstallation:\n1. Place the .sk file in your server's plugins/Skript/scripts/ folder\n2. Run /sk reload ${fileName}\n3. Use the command in-game!\n`);
+            zip.file('README.txt', `Minecraft Skript Generator - http://Go.HSinghHira.me/MSG\n\nGenerated: ${new Date().toLocaleString()}\nCommand: /${commandName.value || 'mycommand'}\n\nInstallation:\n1. Place the .sk file in your server's plugins/Skript/scripts/ folder\n2. Run /sk reload ${fileName}\n3. Use the command in-game!\n`);
 
             const content = await zip.generateAsync({ type: 'blob' });
             const a = document.createElement('a');
@@ -879,8 +891,6 @@
             URL.revokeObjectURL(a.href);
             showAlert('ZIP file downloaded!', 'success');
         });
-
-
 
         // Template system
         const templates = {
