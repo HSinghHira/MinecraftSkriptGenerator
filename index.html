@@ -385,6 +385,63 @@
         .tab-content.active {
             display: block;
         }
+
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .progress-container {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            min-width: 300px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .progress-bar-wrapper {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 
@@ -625,6 +682,33 @@
     <script>
         const $ = id => document.getElementById(id);
 
+        function showProgress(text = 'Processing...') {
+            const overlay = document.createElement('div');
+            overlay.className = 'progress-overlay';
+            overlay.id = 'progressOverlay';
+            overlay.innerHTML = `
+                <div class="progress-container">
+                    <div class="progress-text" id="progressText">${text}</div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar-fill" id="progressBarFill"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function updateProgress(percent, text) {
+            const fill = document.getElementById('progressBarFill');
+            const textEl = document.getElementById('progressText');
+            if (fill) fill.style.width = percent + '%';
+            if (textEl && text) textEl.textContent = text;
+        }
+
+        function hideProgress() {
+            const overlay = document.getElementById('progressOverlay');
+            if (overlay) overlay.remove();
+        }
+
         function showAlert(message, type = 'success') {
             const icons = { success: '✅', error: '❌', info: 'ℹ️' };
             const alertDiv = document.createElement('div');
@@ -861,13 +945,28 @@
             showAlert('Skript copied to clipboard!', 'success');
         });
 
-        $('saveBtn').addEventListener('click', () => {
+        $('saveBtn').addEventListener('click', async () => {
+            showProgress('Preparing file...');
+            updateProgress(30, 'Generating content...');
+            
+            // Simulate processing time for large files
+            await new Promise(resolve => setTimeout(resolve, 100));
+            updateProgress(60, 'Creating download...');
+            
             const blob = new Blob([outputSkript.value], { type: 'text/plain' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = (commandName.value || 'mycommand') + '.sk';
+            
+            updateProgress(90, 'Finalizing...');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             a.click();
             URL.revokeObjectURL(a.href);
+            
+            updateProgress(100, 'Complete!');
+            await new Promise(resolve => setTimeout(resolve, 300));
+            hideProgress();
             showAlert('File downloaded!', 'success');
         });
 
@@ -876,19 +975,35 @@
                 showAlert('JSZip library not loaded yet. Please try again.', 'error');
                 return;
             }
+            
+            showProgress('Preparing ZIP archive...');
+            updateProgress(20, 'Initializing ZIP...');
+            
             const zip = new JSZip();
             const fileName = (commandName.value || 'mycommand') + '.sk';
+            
+            updateProgress(40, 'Adding script file...');
+            await new Promise(resolve => setTimeout(resolve, 100));
             zip.file(fileName, outputSkript.value);
 
+            updateProgress(60, 'Adding documentation...');
+            await new Promise(resolve => setTimeout(resolve, 100));
             // Add a readme
             zip.file('README.txt', `Minecraft Skript Generator - http://Go.HSinghHira.me/MSG\n\nGenerated: ${new Date().toLocaleString()}\nCommand: /${commandName.value || 'mycommand'}\n\nInstallation:\n1. Place the .sk file in your server's plugins/Skript/scripts/ folder\n2. Run /sk reload ${fileName}\n3. Use the command in-game!\n`);
 
+            updateProgress(80, 'Compressing files...');
             const content = await zip.generateAsync({ type: 'blob' });
+            
+            updateProgress(90, 'Creating download...');
             const a = document.createElement('a');
             a.href = URL.createObjectURL(content);
             a.download = (commandName.value || 'mycommand') + '-skript.zip';
             a.click();
             URL.revokeObjectURL(a.href);
+            
+            updateProgress(100, 'Complete!');
+            await new Promise(resolve => setTimeout(resolve, 300));
+            hideProgress();
             showAlert('ZIP file downloaded!', 'success');
         });
 
